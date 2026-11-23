@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practice Activity: Who Owns the Call?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#fff3df; --paper2:#ffe9c7; --ink:#1b1830; --muted:#5b5570;
+  --teal:#134f5c; --tealL:#d3ece9;
+  --tang:#ff6a3d; --tangL:#ffd9cb;
+  --berry:#d62f6b; --berryL:#fbd3e1;
+  --leaf:#14996b; --leafL:#cdeedd;
+  --sun:#FFFF02;
+  --good:#14996b; --bad:#d62f6b;
+  --r:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--paper)}
+html{overflow-x:hidden}
+body{font-family:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);min-height:100vh;position:relative;overflow-x:hidden;line-height:1.5}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.28;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .1  0 0 0 0 .08  0 0 0 0 .15  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");}
+.blob{position:fixed;border-radius:50%;filter:blur(60px);opacity:.55;z-index:0;pointer-events:none;animation:drift 18s ease-in-out infinite alternate}
+.b1{width:420px;height:420px;background:#ffb08f;top:-120px;left:-120px}
+.b2{width:380px;height:380px;background:#9fd8cf;bottom:-140px;right:-100px;animation-delay:-6s}
+.b3{width:260px;height:260px;background:#f7a8c4;top:40%;right:-80px;animation-delay:-10s}
+@keyframes drift{to{transform:translate(40px,30px) scale(1.08)}}
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:22px 18px 60px}
+h1,h2,h3,.disp{font-family:"Bricolage Grotesque","DM Sans",sans-serif;letter-spacing:-.01em}
+button{font-family:inherit;cursor:pointer;color:var(--ink)}
+.opt:disabled,.bigOpt:disabled{color:var(--ink)}
+button:focus-visible,[tabindex]:focus-visible{outline:4px solid var(--teal);outline-offset:3px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase}
+.brand small{display:block;font-weight:500;letter-spacing:.04em;text-transform:none;color:var(--muted);font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--sun);box-shadow:0 0 0 3px rgba(255,255,2,.25)}
+.briefBtn{border:2.5px solid var(--ink);background:#fff;border-radius:999px;padding:8px 16px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:3px 3px 0 var(--ink);transition:transform .15s}
+.briefBtn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+
+/* week rail */
+.rail{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:22px 0 18px}
+.day{border:2.5px solid var(--ink);border-radius:14px;background:#fff;padding:10px 12px;display:flex;align-items:center;gap:10px;opacity:.55;transition:all .3s}
+.day .ic{width:34px;height:34px;flex:none}
+.day b{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.day span{font-size:13px;color:var(--muted);line-height:1.2}
+.day.on{opacity:1;box-shadow:4px 4px 0 var(--ink);transform:translateY(-2px)}
+.day.done{opacity:1}
+.day.done::after{content:"";margin-left:auto;width:20px;height:20px;border-radius:50%;background:var(--leaf) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5 10.5l3 3 7-7' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/14px no-repeat;flex:none}
+.d1.on{background:var(--tangL)} .d2.on{background:var(--tealL)} .d3.on{background:var(--berryL)} .d4.on{background:var(--leafL)} .d5.on{background:#fffbb0}
+
+/* stage */
+.stage{position:relative;min-height:520px}
+.screen{display:none;animation:rise .5s cubic-bezier(.2,.8,.2,1)}
+.screen.show{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.panel{background:#fff;border:3px solid var(--ink);border-radius:var(--r);box-shadow:7px 7px 0 var(--ink);padding:26px;position:relative;overflow:hidden}
+.eyebrow{font-weight:700;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:17px;color:#2d2840;max-width:720px}
+.btn{border:3px solid var(--ink);border-radius:999px;padding:12px 22px;font-weight:800;font-size:16px;background:var(--ink);color:#fff;display:inline-flex;align-items:center;gap:10px;box-shadow:4px 4px 0 var(--tang);transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--tang)}
+.btn[disabled]{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.alt{background:#fff;color:var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+
+/* intro */
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:26px;align-items:center}
+.hero h1{font-size:46px;line-height:1.02;margin:8px 0 14px}
+.hero h1 em{font-style:normal;background:linear-gradient(transparent 58%,var(--sun) 58%,var(--sun) 90%,transparent 90%)}
+.heroArt{width:100%;max-width:340px;justify-self:center}
+.heroArt .spin{transform-origin:150px 150px;animation:spin 14s linear infinite}
+.heroArt .bob{animation:bob 3s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.plan{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}
+.planItem{border:2.5px dashed var(--ink);border-radius:14px;padding:12px;background:var(--paper)}
+.planItem b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:16px}
+.planItem span{font-size:13.5px;color:var(--muted)}
+.fic{display:inline-block;border:2px solid var(--ink);border-radius:8px;padding:2px 8px;font-size:12px;font-weight:700;background:#fff;margin-left:6px;vertical-align:middle}
+
+/* station header */
+.sHead{display:flex;align-items:flex-start;gap:16px;margin-bottom:18px}
+.sHead .big{width:64px;height:64px;flex:none}
+.sHead h2{font-size:30px;line-height:1.1;margin:2px 0 6px}
+.counter{margin-left:auto;font-weight:800;font-family:"Bricolage Grotesque",sans-serif;font-size:15px;border:2.5px solid var(--ink);border-radius:999px;padding:6px 14px;background:#fff;white-space:nowrap}
+.bar{height:10px;border:2.5px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden;margin:0 0 18px}
+.bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+
+/* question card */
+.qcard{border:3px solid var(--ink);border-radius:16px;padding:20px 22px;background:var(--paper);font-size:19px;font-weight:600;line-height:1.4;position:relative;animation:flipIn .55s cubic-bezier(.2,.8,.2,1)}
+@keyframes flipIn{from{opacity:0;transform:perspective(800px) rotateX(-35deg) translateY(-10px)}to{opacity:1;transform:none}}
+.qcard .tagline{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--muted);margin-bottom:6px}
+.choices{display:grid;gap:12px;margin-top:16px}
+.c5{grid-template-columns:repeat(5,1fr)} .c3{grid-template-columns:repeat(3,1fr)} .c2{grid-template-columns:repeat(2,1fr)} .c1{grid-template-columns:1fr}
+.opt{border:3px solid var(--ink);border-radius:14px;background:#fff;padding:14px 12px;text-align:center;font-weight:700;font-size:15px;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .15s,box-shadow .15s,background .2s;box-shadow:4px 4px 0 var(--ink)}
+.opt.txt{text-align:left;align-items:flex-start;font-weight:600;font-size:15.5px;line-height:1.4}
+.opt svg{width:46px;height:46px}
+.opt:hover:not([disabled]){transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.opt[disabled]{cursor:default}
+.opt.right{background:var(--leafL);border-color:var(--good);box-shadow:4px 4px 0 var(--good);animation:pop .4s}
+.opt.wrong{background:var(--berryL);border-color:var(--bad);box-shadow:4px 4px 0 var(--bad);animation:shake .45s}
+.opt.faded{opacity:.45}
+.opt.sel{background:#fffbb0}
+@keyframes pop{40%{transform:scale(1.06)}}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.fb{margin-top:16px;border-radius:14px;padding:14px 16px;border:3px solid var(--ink);display:none;gap:12px;align-items:flex-start;animation:rise .35s}
+.fb.show{display:flex}
+.fb.ok{background:var(--leafL)} .fb.no{background:var(--berryL)}
+.fb svg{width:34px;height:34px;flex:none}
+.fb b{font-family:"Bricolage Grotesque",sans-serif}
+.nextRow{margin-top:16px;display:flex;justify-content:flex-end}
+
+/* station 1 tray */
+.tray{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:22px}
+.bin{border:2.5px dashed var(--ink);border-radius:12px;min-height:88px;padding:8px;background:rgba(255,255,255,.6)}
+.bin h4{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.mini{font-size:12px;line-height:1.3;border-radius:8px;padding:6px 8px;margin-top:6px;border:2px solid var(--ink);background:#fff;animation:land .5s cubic-bezier(.2,.8,.2,1)}
+.mini.x{border-color:var(--bad)}
+@keyframes land{from{opacity:0;transform:translateY(-24px) scale(.8)}to{opacity:1;transform:none}}
+
+/* station 2 */
+.s2grid{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:start}
+.sticky{background:var(--sun);border:3px solid var(--ink);border-radius:6px 16px 16px 16px;padding:18px 20px;font-size:19px;font-weight:600;box-shadow:6px 6px 0 var(--ink);transform:rotate(-1.2deg);animation:flipIn .55s}
+.radarBox{border:3px solid var(--ink);border-radius:16px;background:var(--paper);padding:14px}
+.radarBox svg{width:100%;height:auto;display:block}
+.radarPoly{transition:all .7s cubic-bezier(.2,.8,.2,1)}
+.hex{clip-path:none}
+.multi .opt.sel{background:var(--tealL);border-color:var(--teal);box-shadow:4px 4px 0 var(--teal)}
+
+/* station 3 */
+.board{display:grid;grid-template-columns:120px 1fr 1fr;gap:10px;margin-top:22px}
+.board .hd{font-weight:800;font-family:"Bricolage Grotesque",sans-serif;font-size:15px;border:3px solid var(--ink);border-radius:12px;padding:10px;background:var(--ink);color:#fff}
+.board .rl{font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;border:3px solid var(--ink);border-radius:12px;padding:10px;display:flex;align-items:center;gap:8px;background:#fff}
+.cell{border:2.5px dashed var(--ink);border-radius:12px;min-height:70px;padding:8px;background:rgba(255,255,255,.6);font-size:13px;line-height:1.35}
+.cell .mini{margin-top:0}
+.optPill{display:inline-block;border:2px solid var(--ink);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;margin-bottom:8px;background:#fff}
+
+/* station 4 */
+.pick2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+.bigOpt{border:3px solid var(--ink);border-radius:16px;padding:18px;background:#fff;text-align:left;box-shadow:5px 5px 0 var(--ink);transition:transform .15s}
+.bigOpt:hover:not([disabled]){transform:translate(-2px,-2px)}
+.bigOpt h3{font-size:22px;margin:6px 0}
+.bigOpt p{font-size:14.5px;color:#3a3450}
+.bigOpt.sel{background:var(--leafL)}
+.bigOpt[disabled]:not(.sel){opacity:.45}
+.logCard{margin-top:20px;border:3px solid var(--ink);border-radius:16px;background:#fff;padding:18px 20px;position:relative;display:none}
+.logCard.show{display:block;animation:rise .5s}
+.stamp{position:absolute;right:18px;top:14px;border:4px solid var(--leaf);color:var(--leaf);font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:.12em;padding:4px 12px;border-radius:10px;transform:rotate(8deg) scale(2);opacity:0;transition:all .45s cubic-bezier(.2,1.6,.4,1)}
+.logCard.show .stamp{transform:rotate(8deg) scale(1);opacity:1;transition-delay:.4s}
+.logGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.logGrid div{border:2px solid var(--ink);border-radius:10px;padding:8px 10px;font-size:13.5px;background:var(--paper)}
+.logGrid b{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* debrief */
+.rings{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:22px 0}
+.ring{border:3px solid var(--ink);border-radius:16px;background:#fff;padding:16px;text-align:center;box-shadow:5px 5px 0 var(--ink)}
+.ring svg{width:110px;height:110px}
+.ring circle.fg{transition:stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1)}
+.ring b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:17px;margin-top:6px}
+.ring span{font-size:13.5px;color:var(--muted)}
+.total{font-family:"Bricolage Grotesque",sans-serif;font-size:54px;font-weight:800;line-height:1}
+.used{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px}
+.used div{border:2.5px solid var(--ink);border-radius:12px;padding:12px 14px;background:var(--paper);font-size:14.5px}
+.used b{font-family:"Bricolage Grotesque",sans-serif}
+.burst{position:absolute;pointer-events:none;width:10px;height:10px;border-radius:2px;animation:fly 1.1s ease-out forwards}
+@keyframes fly{to{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:0}}
+
+/* brief drawer */
+.scrim{position:fixed;inset:0;background:rgba(27,24,48,.45);opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.scrim.show{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(460px,100%);background:var(--paper);border-left:3px solid var(--ink);z-index:21;transform:translateX(105%);transition:transform .4s cubic-bezier(.2,.8,.2,1);overflow-y:auto;padding:22px}
+.drawer{visibility:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),visibility 0s .4s}
+.drawer.show{transform:none;visibility:visible;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.drawer h2{font-size:26px;margin:6px 0 10px}
+.drawer h3{font-size:16px;margin:16px 0 6px;letter-spacing:.06em;text-transform:uppercase}
+.drawer ul{padding-left:18px}
+.drawer li{margin:6px 0;font-size:14.5px}
+.close{float:right;border:2.5px solid var(--ink);background:#fff;border-radius:50%;width:40px;height:40px;font-size:20px;font-weight:800}
+.optBox{border:2.5px solid var(--ink);border-radius:12px;padding:10px 12px;background:#fff;margin-top:8px;font-size:14.5px}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr} .hero h1{font-size:36px}
+  .plan,.rings{grid-template-columns:repeat(2,1fr)}
+  .c5{grid-template-columns:repeat(2,1fr)} .c3{grid-template-columns:1fr}
+  .tray{grid-template-columns:repeat(2,1fr)}
+  .s2grid,.pick2,.used{grid-template-columns:1fr}
+  .board{grid-template-columns:90px 1fr 1fr}
+  .logGrid{grid-template-columns:1fr 1fr}
+  .rail{grid-template-columns:repeat(5,1fr)} .day div span{display:none} .day{min-width:0} .day.done::after{display:none} .day.done{background:var(--leafL)} .day{padding:8px;justify-content:center} .day b{font-size:10px}
+  .counter{display:none}
+}
+@media (max-width:520px){.day b{display:none} .logCard .eyebrow{margin-top:34px} .panel{padding:18px} .c2{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Nexford University<small>MHY6800 Product Management with Agile and Lean · Module 1</small></div>
+    <div class="row">
+      <span class="chip"><span class="dot"></span>Practice Activity</span>
+      <button class="briefBtn" id="openBrief" type="button" aria-haspopup="dialog"><span id="briefIcon"></span>Vonari brief</button>
+    </div>
+  </header>
+
+  <nav class="rail" aria-label="Your week">
+    <div class="day d1" data-day="1"><span class="ic" data-icon="compass"></span><div><b>Monday</b><span>Decision desk</span></div></div>
+    <div class="day d2" data-day="2"><span class="ic" data-icon="radar"></span><div><b>Tuesday</b><span>Competency map</span></div></div>
+    <div class="day d3" data-day="3"><span class="ic" data-icon="scale"></span><div><b>Wednesday</b><span>Weigh the options</span></div></div>
+    <div class="day d4" data-day="4"><span class="ic" data-icon="stamp"></span><div><b>Thursday</b><span>Make the call</span></div></div>
+    <div class="day d5" data-day="5"><span class="ic" data-icon="flag"></span><div><b>Friday</b><span>Your results</span></div></div>
+  </nav>
+
+  <main class="stage" id="stage" aria-live="polite">
+    <!-- INTRO -->
+    <section class="screen show" id="scr-intro">
+      <div class="panel">
+        <div class="hero">
+          <div>
+            <div class="eyebrow">Module 1 · Practice Activity</div>
+            <h1 class="disp">Who owns the call? <em>Your first week</em> at Vonari</h1>
+            <p class="lead">You've just joined Vonari <span class="fic">fictional</span>, a 30-person company whose app links families with private tutors. The CEO has one question: should Vonari create a dedicated product manager role, or should someone already on the team take on product decisions? Spend your week using what you learned in Module 1 to help answer it.</p>
+            <div class="plan">
+              <div class="planItem"><b>Monday</b><span>Sort decisions by who should own them</span></div>
+              <div class="planItem"><b>Tuesday</b><span>Match evidence to competencies</span></div>
+              <div class="planItem"><b>Wednesday</b><span>Assess value, cost, and risk</span></div>
+              <div class="planItem"><b>Thursday</b><span>Recommend and log the decision</span></div>
+            </div>
+            <p class="lead" style="font-size:15px;margin-bottom:18px">You get one try at each item. If you miss one, you'll see why, and you can keep going. Open the <b>Vonari brief</b> at any time for the facts.</p>
+            <button class="btn" id="startBtn" type="button">Start Monday <span data-icon="arrow"></span></button>
+          </div>
+          <div class="heroArt" id="heroArt"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DAY 1 -->
+    <section class="screen" id="scr-1">
+      <div class="panel">
+        <div class="sHead"><span class="big" data-icon="compass"></span>
+          <div><div class="eyebrow">Monday · Decision desk</div><h2>Who should own this decision?</h2>
+          <p class="lead" style="font-size:15.5px">Name the type of decision first, then the role: why and what to build, how and when to deliver a fixed piece of work, the order of a Scrum Team's work, how to build, or company strategy.</p></div>
+          <div class="counter" id="c1"></div></div>
+        <div class="bar"><i id="b1"></i></div>
+        <div id="q1"></div>
+        <div class="tray" id="tray1"></div>
+      </div>
+    </section>
+
+    <!-- DAY 2 -->
+    <section class="screen" id="scr-2">
+      <div class="panel">
+        <div class="sHead"><span class="big" data-icon="radar"></span>
+          <div><div class="eyebrow">Tuesday · Competency map</div><h2>Which competency does this evidence point to?</h2>
+          <p class="lead" style="font-size:15.5px">Every competency you pick needs a fact from the brief beside it. Tag each fact, and watch Vonari's competency map grow.</p></div>
+          <div class="counter" id="c2"></div></div>
+        <div class="bar"><i id="b2"></i></div>
+        <div class="s2grid">
+          <div id="q2"></div>
+          <div class="radarBox"><div class="eyebrow" style="margin-bottom:6px">Vonari's competency map</div><div id="radar"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DAY 3 -->
+    <section class="screen" id="scr-3">
+      <div class="panel">
+        <div class="sHead"><span class="big" data-icon="scale"></span>
+          <div><div class="eyebrow">Wednesday · Weigh the options</div><h2>Value, cost, or risk?</h2>
+          <p class="lead" style="font-size:15.5px">Judge both options on the same three criteria. Sort each fact into value to customers, cost (including opportunity cost), or risk.</p></div>
+          <div class="counter" id="c3"></div></div>
+        <div class="bar"><i id="b3"></i></div>
+        <div id="q3"></div>
+        <div class="board" id="board"></div>
+      </div>
+    </section>
+
+    <!-- DAY 4 -->
+    <section class="screen" id="scr-4">
+      <div class="panel">
+        <div class="sHead"><span class="big" data-icon="stamp"></span>
+          <div><div class="eyebrow">Thursday · Make the call</div><h2>Recommend one option and log it</h2>
+          <p class="lead" style="font-size:15.5px">Either option can be the right call. What matters is that your reason follows from the evidence, that you plan for one risk, and that you record the decision.</p></div>
+          <div class="counter" id="c4"></div></div>
+        <div class="bar"><i id="b4"></i></div>
+        <div id="q4"></div>
+        <div class="logCard" id="logCard"><div class="stamp">LOGGED</div>
+          <div class="eyebrow">Decision log line</div>
+          <div class="logGrid" id="logGrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEBRIEF -->
+    <section class="screen" id="scr-5">
+      <div class="panel" id="debriefPanel">
+        <div class="row">
+          <div><div class="eyebrow">Friday · Your results</div><h2 class="disp" style="font-size:32px;margin-top:4px">Your week at Vonari is done</h2></div>
+          <div class="spacer"></div>
+          <div style="text-align:right"><div class="total" id="total">0</div><div class="eyebrow" id="totalOf">items correct</div></div>
+        </div>
+        <div class="rings" id="rings"></div>
+        <div class="eyebrow">What you practiced from Module 1</div>
+        <div class="used">
+          <div><b>Section 2:</b> telling a product manager, a project manager, and a Product Owner apart by the type of decision.</div>
+          <div><b>Section 3:</b> linking each competency to evidence in a brief and finding which ones matter most.</div>
+          <div><b>Section 4:</b> assessing options on value to customers, cost, and risk.</div>
+          <div><b>Section 4:</b> recommending one option, planning for a risk, and writing a decision log line.</div>
+        </div>
+        <div class="row" style="margin-top:20px"><div class="spacer"></div><button class="btn alt" id="restart" type="button"><span data-icon="redo"></span>Start the week again</button></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="briefTitle" aria-hidden="true">
+  <button class="close" id="closeBrief" type="button" aria-label="Close the brief">×</button>
+  <div class="eyebrow">Company brief</div>
+  <h2 id="briefTitle">Vonari <span class="fic">fictional</span></h2>
+  <p style="font-size:14.5px">Vonari, its people, and its numbers are fictional and were written for this practice. People are named by role only.</p>
+  <h3>The company</h3>
+  <ul>
+    <li>About 30 people. Its app links families with private tutors.</li>
+    <li>The CEO and the CTO have made every product decision so far.</li>
+  </ul>
+  <h3>What's going wrong</h3>
+  <ul>
+    <li>4 of the last 5 releases shipped late. Requests reach developers directly from sales, support, and both founders.</li>
+    <li>A Group Lessons feature took 3 developers 8 weeks. It was built because one large tutoring center asked. In its first two months, 5% of active families used it, and nobody checked who used it until a sales call.</li>
+    <li>Lesson reminders that never arrive caused 30% of support tickets last quarter. The fix has waited four months.</li>
+    <li>Nobody has spoken with families in six months.</li>
+    <li>The CEO and the CTO each keep their own list of top priorities.</li>
+    <li>Sales has promised two more custom reports to single tutoring centers.</li>
+    <li>Estimates for the reminder fix were off by three weeks, and nobody asked why.</li>
+  </ul>
+  <h3>What people say</h3>
+  <ul>
+    <li>CEO: "I'll spend the next six months raising funds. I want the final say on pricing."</li>
+    <li>CTO: "We have budget for one new role this year. I planned it as a developer."</li>
+    <li>Head of Support: "I hear from families every day."</li>
+  </ul>
+  <h3>The two options</h3>
+  <div class="optBox"><b>Option A. Create a dedicated product manager role.</b> Costs about the same as one senior developer, so the planned developer role waits. Hiring takes about three months, and a new person needs time to learn the product.</div>
+  <div class="optBox"><b>Option B. The Head of Support takes product decisions two days a week.</b> No hiring cost or delay. Support work slows while the Head of Support spends time on product.</div>
+</aside>
+
+<script>
+(function(){
+"use strict";
+/* ---------- icon set (duotone, drawn inline) ---------- */
+var INK="#1b1830";
+var IC={
+compass:'<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="#ffd9cb" stroke="'+INK+'" stroke-width="3.5"/><circle cx="32" cy="32" r="19" fill="#fff" stroke="'+INK+'" stroke-width="2" stroke-dasharray="3 4"/><path d="M38 20 L34 34 L26 44 L30 30 Z" fill="#ff6a3d" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="32" r="3" fill="'+INK+'"/></svg>',
+gantt:'<svg viewBox="0 0 64 64"><rect x="6" y="8" width="52" height="48" rx="8" fill="#fff" stroke="'+INK+'" stroke-width="3.5"/><path d="M6 20h52" stroke="'+INK+'" stroke-width="3"/><rect x="12" y="26" width="22" height="7" rx="3.5" fill="#134f5c"/><rect x="24" y="36" width="20" height="7" rx="3.5" fill="#ff6a3d"/><rect x="36" y="46" width="16" height="6" rx="3" fill="#14996b"/><circle cx="14" cy="14" r="2.5" fill="'+INK+'"/><circle cx="22" cy="14" r="2.5" fill="'+INK+'"/></svg>',
+backlog:'<svg viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="12" rx="4" fill="#FFFF02" stroke="'+INK+'" stroke-width="3"/><rect x="10" y="26" width="44" height="12" rx="4" fill="#fff" stroke="'+INK+'" stroke-width="3"/><rect x="10" y="44" width="44" height="12" rx="4" fill="#fff" stroke="'+INK+'" stroke-width="3"/><path d="M16 14h4M16 32h4M16 50h4" stroke="'+INK+'" stroke-width="3" stroke-linecap="round"/><path d="M58 18 L58 50" stroke="#d62f6b" stroke-width="3.5" stroke-linecap="round"/><path d="M53 45 L58 51 L63 45" fill="none" stroke="#d62f6b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+code:'<svg viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="40" rx="8" fill="#cdeedd" stroke="'+INK+'" stroke-width="3.5"/><path d="M24 22 L16 30 L24 38M40 22 L48 30 L40 38" fill="none" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M35 20 L29 40" stroke="#14996b" stroke-width="3.5" stroke-linecap="round"/><path d="M22 56h20" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/></svg>',
+tower:'<svg viewBox="0 0 64 64"><path d="M12 56V24l20-12 20 12v32z" fill="#fbd3e1" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/><path d="M24 56V40h16v16" fill="#fff" stroke="'+INK+'" stroke-width="3"/><path d="M8 56h48" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/><circle cx="32" cy="28" r="5" fill="#FFFF02" stroke="'+INK+'" stroke-width="3"/></svg>',
+radar:'<svg viewBox="0 0 64 64"><polygon points="32,6 57,24 47,54 17,54 7,24" fill="#d3ece9" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/><polygon points="32,18 46,28 40,46 24,44 18,28" fill="#134f5c" fill-opacity=".85" stroke="'+INK+'" stroke-width="2.5" stroke-linejoin="round"/><circle cx="32" cy="18" r="3" fill="#FFFF02" stroke="'+INK+'" stroke-width="2"/></svg>',
+scale:'<svg viewBox="0 0 64 64"><path d="M32 10v42M20 56h24" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/><path d="M10 20h44" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/><path d="M10 20 L4 36h12z M54 20 L48 34h12z" fill="#fff" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"/><path d="M4 36a6 6 0 0 0 12 0z" fill="#d62f6b" stroke="'+INK+'" stroke-width="3"/><path d="M48 34a6 6 0 0 0 12 0z" fill="#fbd3e1" stroke="'+INK+'" stroke-width="3"/><circle cx="32" cy="10" r="4" fill="#FFFF02" stroke="'+INK+'" stroke-width="3"/></svg>',
+stamp:'<svg viewBox="0 0 64 64"><path d="M26 8h12v14c0 4 8 6 8 12H18c0-6 8-8 8-12z" fill="#cdeedd" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/><rect x="12" y="34" width="40" height="10" rx="3" fill="#14996b" stroke="'+INK+'" stroke-width="3.5"/><path d="M10 54h44" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="6 5"/></svg>',
+flag:'<svg viewBox="0 0 64 64"><path d="M14 58V8" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/><path d="M14 10h34l-7 9 7 9H14z" fill="#FFFF02" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/><path d="M20 15h6v5h-6zM32 20h6v5h-6z" fill="'+INK+'"/></svg>',
+book:'<svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 5c3-1 6-1 9 1 3-2 6-2 9-1v14c-3-1-6-1-9 1-3-2-6-2-9-1z" fill="#FFFF02" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"/><path d="M12 6v14" stroke="'+INK+'" stroke-width="2"/></svg>',
+arrow:'<svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 12h15M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+redo:'<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ok:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#14996b" stroke="'+INK+'" stroke-width="3"/><path d="M12 21l5 5 11-11" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+no:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#d62f6b" stroke="'+INK+'" stroke-width="3"/><path d="M14 14l12 12M26 14L14 26" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg>',
+bulb:'<svg viewBox="0 0 64 64"><path d="M32 8a17 17 0 0 0-10 31c2 2 3 4 3 7h14c0-3 1-5 3-7A17 17 0 0 0 32 8z" fill="#FFFF02" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/><path d="M26 52h12M28 58h8" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/></svg>',
+people:'<svg viewBox="0 0 64 64"><circle cx="22" cy="22" r="9" fill="#ffd9cb" stroke="'+INK+'" stroke-width="3.5"/><circle cx="44" cy="24" r="8" fill="#d3ece9" stroke="'+INK+'" stroke-width="3.5"/><path d="M6 54c2-12 10-16 16-16s14 4 16 16z" fill="#ff6a3d" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/><path d="M36 40c2-1 5-2 8-2 6 0 12 4 14 14H40" fill="#134f5c" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/></svg>',
+chart:'<svg viewBox="0 0 64 64"><rect x="6" y="8" width="52" height="48" rx="8" fill="#fff" stroke="'+INK+'" stroke-width="3.5"/><rect x="14" y="34" width="8" height="14" rx="2" fill="#14996b" stroke="'+INK+'" stroke-width="2.5"/><rect x="28" y="24" width="8" height="24" rx="2" fill="#ff6a3d" stroke="'+INK+'" stroke-width="2.5"/><rect x="42" y="16" width="8" height="32" rx="2" fill="#134f5c" stroke="'+INK+'" stroke-width="2.5"/></svg>',
+mega:'<svg viewBox="0 0 64 64"><path d="M10 26v12h8l22 12V14L18 26z" fill="#fbd3e1" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/><path d="M18 38l4 14h8l-3-12" fill="#fff" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/><path d="M48 24c3 2 4 5 4 8s-1 6-4 8M54 18c5 4 7 9 7 14s-2 10-7 14" fill="none" stroke="#d62f6b" stroke-width="3.5" stroke-linecap="round"/></svg>',
+gear:'<svg viewBox="0 0 64 64"><path d="M32 8l5 6 8-2 2 8 8 2-2 8 6 5-6 5 2 8-8 2-2 8-8-2-5 6-5-6-8 2-2-8-8-2 2-8-6-5 6-5-2-8 8-2 2-8 8 2z" fill="#cdeedd" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="32" r="9" fill="#fff" stroke="'+INK+'" stroke-width="3.5"/><path d="M28 32l3 3 6-6" fill="none" stroke="#14996b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+heart:'<svg viewBox="0 0 64 64"><path d="M32 54C14 42 8 32 8 23a12 12 0 0 1 24-4 12 12 0 0 1 24 4c0 9-6 19-24 31z" fill="#ff6a3d" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/><path d="M18 24a6 6 0 0 1 6-6" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none"/></svg>',
+coins:'<svg viewBox="0 0 64 64"><ellipse cx="26" cy="44" rx="16" ry="7" fill="#FFFF02" stroke="'+INK+'" stroke-width="3.5"/><path d="M10 36v8M42 36v8" stroke="'+INK+'" stroke-width="3.5"/><ellipse cx="26" cy="36" rx="16" ry="7" fill="#FFFF02" stroke="'+INK+'" stroke-width="3.5"/><ellipse cx="42" cy="22" rx="14" ry="6" fill="#fff" stroke="'+INK+'" stroke-width="3.5"/><path d="M28 22v8M56 22v8" stroke="'+INK+'" stroke-width="3.5"/><path d="M28 30c0 3 6 6 14 6s14-3 14-6" fill="none" stroke="'+INK+'" stroke-width="3.5"/></svg>',
+bolt:'<svg viewBox="0 0 64 64"><path d="M32 6L8 54h48z" fill="#fbd3e1" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/><path d="M32 22v16" stroke="#d62f6b" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="45" r="3" fill="#d62f6b"/></svg>'
+};
+function ic(n){return IC[n]||"";}
+document.querySelectorAll("[data-icon]").forEach(function(el){el.innerHTML=ic(el.getAttribute("data-icon"));});
+document.getElementById("briefIcon").innerHTML=ic("book");
+
+/* hero art */
+document.getElementById("heroArt").innerHTML=
+'<svg viewBox="0 0 300 300" role="img" aria-label="A week planner with a compass">'+
+'<g class="spin"><circle cx="150" cy="150" r="128" fill="none" stroke="'+INK+'" stroke-width="3" stroke-dasharray="6 10"/></g>'+
+'<rect x="58" y="62" width="184" height="176" rx="22" fill="#fff" stroke="'+INK+'" stroke-width="5"/>'+
+'<rect x="58" y="62" width="184" height="44" rx="20" fill="#134f5c" stroke="'+INK+'" stroke-width="5"/>'+
+'<text x="150" y="92" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="20" fill="#fff">WEEK 1</text>'+
+'<g font-family="DM Sans, sans-serif" font-weight="700" font-size="14" fill="'+INK+'">'+
+'<rect x="76" y="122" width="66" height="40" rx="10" fill="#ffd9cb" stroke="'+INK+'" stroke-width="3"/><text x="109" y="147" text-anchor="middle">MON</text>'+
+'<rect x="158" y="122" width="66" height="40" rx="10" fill="#d3ece9" stroke="'+INK+'" stroke-width="3"/><text x="191" y="147" text-anchor="middle">TUE</text>'+
+'<rect x="76" y="176" width="66" height="40" rx="10" fill="#fbd3e1" stroke="'+INK+'" stroke-width="3"/><text x="109" y="201" text-anchor="middle">WED</text>'+
+'<rect x="158" y="176" width="66" height="40" rx="10" fill="#cdeedd" stroke="'+INK+'" stroke-width="3"/><text x="191" y="201" text-anchor="middle">THU</text></g>'+
+'<g class="bob"><circle cx="232" cy="70" r="34" fill="#FFFF02" stroke="'+INK+'" stroke-width="5"/><path d="M242 54 L236 74 L222 86 L228 66 Z" fill="#ff6a3d" stroke="'+INK+'" stroke-width="4" stroke-linejoin="round"/><circle cx="232" cy="70" r="4" fill="'+INK+'"/></g>'+
+'</svg>';
+
+/* ---------- data (Module 1 concepts only) ---------- */
+var ROLES=[
+ {k:"pm",n:"Product manager",q:"Why and what to build",i:"compass"},
+ {k:"proj",n:"Project manager",q:"How and when, fixed work",i:"gantt"},
+ {k:"po",n:"Product Owner",q:"Order of the team's work",i:"backlog"},
+ {k:"dev",n:"Developers",q:"How to build",i:"code"},
+ {k:"lead",n:"Leadership",q:"Company strategy",i:"tower"}
+];
+var D1=[
+ {t:"Decide whether Vonari should build exam-season revision packs next year, and for which families.",a:"pm",why:"This is about why and what to build, and for whom. That's product management."},
+ {t:"Plan the schedule, budget, and risks for moving Vonari's payments to a new provider by a fixed date.",a:"proj",why:"A defined piece of work with a start, an end, and a budget is project management: how and when to deliver it."},
+ {t:"Order the Product Backlog so the Scrum Team works on the most valuable item in the next sprint.",a:"po",why:"In Scrum, ordering the Product Backlog to get the most value is the Product Owner's accountability."},
+ {t:"Split the reminder fix into development tasks.",a:"dev",why:"How to build something belongs to the developers. In Scrum, no manager makes that call for them."},
+ {t:"Set the monthly price for families who sign up next quarter.",a:"lead",why:"Pricing is company strategy, so it stays with leadership. A product manager should still bring evidence on how families might react."},
+ {t:"Choose which problem the app tackles next: missed lesson reminders or a new feature one tutoring center asked for.",a:"pm",why:"Choosing which problem to solve next, judged by results for customers and the business, is product management."}
+];
+var COMPS=[
+ {k:"strat",n:"Strategy",i:"compass"},
+ {k:"cust",n:"Customer insight",i:"people"},
+ {k:"data",n:"Data",i:"chart"},
+ {k:"comm",n:"Communication",i:"mega"},
+ {k:"tech",n:"Technical fluency",i:"gear"}
+];
+var D2=[
+ {t:"Nobody has spoken with families in six months.",a:"cust",why:"Learning what users need through interviews, visits, and support data is customer insight. Six months without contact is a clear signal it's missing."},
+ {t:"Group Lessons launched, and nobody checked who used it until a sales call.",a:"data",why:"Using numbers such as usage to decide and to check results is the data competency."},
+ {t:"The CEO and the CTO each keep their own list of top priorities.",a:"comm",why:"Aligning people around one clear priority list and explaining trade-offs is communication."},
+ {t:"Sales has promised two more custom reports to single tutoring centers.",a:"strat",why:"Building one-off features for single customers is a strategy signal: someone needs to link the product to company goals and say no to work that doesn't fit."},
+ {t:"Estimates for the reminder fix were off by three weeks, and nobody asked why.",a:"tech",why:"Discussing effort, risk, and options with developers is technical fluency. Far-off estimates that nobody questions point to it."},
+ {t:"Lesson reminders that never arrive caused 30% of support tickets, and nobody has used that figure to set priorities.",a:"data",why:"Support-ticket numbers are data. The competency is using them to decide what comes first."},
+ {t:"Group Lessons was built because one tutoring center asked, not because families did.",a:"cust",why:"Building without checking what users need points to customer insight. The request came from a partner, not from families."}
+];
+var D3=[
+ {o:"A",t:"A full-time owner could talk to families every week and keep one priority list.",a:"value",why:"This is the benefit to customers: research and one priority list mean fewer features nobody uses."},
+ {o:"A",t:"A product manager costs about the same as one senior developer, so the planned developer role waits.",a:"cost",why:"Money and opportunity cost: the developer you don't hire is what you give up."},
+ {o:"A",t:"A new hire lacks context at first and may make slow calls in the first months.",a:"risk",why:"This could go wrong after you choose it, so it's a risk. A mitigation would make it less likely or less harmful."},
+ {o:"B",t:"The Head of Support already hears from families every day.",a:"value",why:"Closeness to customers is value: the owner already knows where families struggle."},
+ {o:"B",t:"Support work slows while the Head of Support spends two days a week on product.",a:"cost",why:"What the company gives up to choose this option is a cost, even with no hiring bill."},
+ {o:"B",t:"If the founders keep overruling a part-time owner, priorities stay unclear.",a:"risk",why:"Unclear authority is a risk named in Section 4: if founders keep overruling the role, the priorities stay unclear."}
+];
+var CRIT=[{k:"value",n:"Value",i:"heart"},{k:"cost",n:"Cost",i:"coins"},{k:"risk",n:"Risk",i:"bolt"}];
+var D4={
+ A:{
+  name:"Option A: create a dedicated product manager role",
+  reasons:[
+   {t:"A full-time owner can talk to families and keep one priority list. The brief shows no family contact in six months and two competing priority lists.",ok:true},
+   {t:"Every growing company should have a product manager.",ok:false,why:"This is an opinion with no evidence from the brief."},
+   {t:"It costs nothing and keeps the planned developer role.",ok:false,why:"That's not true for Option A: it costs about one senior developer, and the developer role waits."}
+  ],
+  risk:"A new hire lacks context at first.",
+  mits:[
+   {t:"For the first month, pair the new product manager with the Head of Support and review the priority list together each sprint.",ok:true},
+   {t:"Hope the new person learns quickly.",ok:false,why:"Hope isn't a mitigation. A mitigation is a specific step that makes the risk less likely or less harmful."},
+   {t:"Let developers keep picking work from the support inbox for now.",ok:false,why:"That keeps one of the problems in the brief, so it doesn't reduce the new hire's lack of context."}
+  ],
+  logs:[
+   {t:"Hire a dedicated product manager.",ok:false,why:"It records the decision only, with no main reason or evidence, so nobody can check the reasoning later."},
+   {t:"Hire a dedicated product manager. Main reason: nobody owns one priority list or talks to families. Evidence: 4 of 5 releases late; no family contact in six months. Review at month three.",ok:true},
+   {t:"Hire a dedicated product manager because it feels right for a company our size.",ok:false,why:"The reason is a feeling, and there's no evidence from the brief."}
+  ],
+  log:{d:"Hire a dedicated product manager",r:"Nobody owns one priority list or talks to families",e:"4 of 5 releases late; no family contact in six months",v:"Review at month three"}
+ },
+ B:{
+  name:"Option B: the Head of Support takes product decisions two days a week",
+  reasons:[
+   {t:"It has no hiring cost or delay, and the Head of Support already hears from families every day, which fits the missed-reminder tickets.",ok:true},
+   {t:"Support leads always make the best product owners.",ok:false,why:"This is a general claim with no evidence from the brief."},
+   {t:"A full-time person can run research every week.",ok:false,why:"That supports Option A, not a part-time role."}
+  ],
+  risk:"The Head of Support is overloaded, and decisions stay slow.",
+  mits:[
+   {t:"Move routine support reviews to a support agent, and set a change trigger: if the backlog still isn't ordered each sprint by month three, hire a product manager.",ok:true},
+   {t:"Ask the Head of Support to work harder.",ok:false,why:"That isn't a specific step, and it makes overload worse, not better."},
+   {t:"Let the CEO and CTO keep their own priority lists too.",ok:false,why:"Two competing lists is a problem from the brief, so it adds to the risk instead of reducing it."}
+  ],
+  logs:[
+   {t:"The Head of Support takes product decisions two days a week.",ok:false,why:"It records the decision only, with no main reason or evidence."},
+   {t:"The Head of Support takes product decisions two days a week for six months. Main reason: no hiring cost, and she hears from families daily. Evidence: 30% of tickets are missed reminders; budget for one role. Review at month three.",ok:true},
+   {t:"The Head of Support takes product decisions because she is the most senior person available.",ok:false,why:"Seniority isn't evidence from the brief, and the line has no evidence or review point."}
+  ],
+  log:{d:"Head of Support owns product decisions two days a week for six months",r:"No hiring cost, and she hears from families daily",e:"30% of tickets are missed reminders; budget for one role",v:"Review at month three"}
+ }
+};
+
+/* ---------- state ---------- */
+var S;
+function reset(){S={day:0,i1:0,i2:0,i3:0,s:{1:[],2:[],3:[],4:[]},pick:null,step4:0,radar:{strat:0,cust:0,data:0,comm:0,tech:0}};}
+reset();
+var MAX={1:D1.length,2:D2.length+1,3:D3.length,4:3};
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function show(n){
+  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("show");});
+  $(n===0?"scr-intro":"scr-"+n).classList.add("show");
+  document.querySelectorAll(".day").forEach(function(d){var k=+d.getAttribute("data-day");d.classList.toggle("on",k===n);d.classList.toggle("done",k<n&&n>0);});
+  S.day=n; window.scrollTo({top:0,behavior:"smooth"});
+}
+function fbHTML(ok,why,correctLabel){
+  return '<div class="fb show '+(ok?"ok":"no")+'">'+ic(ok?"ok":"no")+'<div><b>'+(ok?"Correct.":"Not quite.")+'</b> '+(!ok&&correctLabel?'The answer is <b>'+esc(correctLabel)+'</b>. ':'')+esc(why)+'</div></div>';
+}
+function setBar(n,i,total){$("b"+n).style.width=(i/total*100)+"%";$("c"+n).textContent=Math.min(i+1,total)+" of "+total;}
+
+/* ---------- day 1 ---------- */
+function tray1(){
+  var h="";ROLES.forEach(function(r){h+='<div class="bin" id="bin-'+r.k+'"><h4><span style="width:20px;height:20px;display:inline-block">'+ic(r.i)+'</span>'+r.n+'</h4></div>';});
+  $("tray1").innerHTML=h;
+}
+function render1(){
+  var q=D1[S.i1];setBar(1,S.i1,D1.length);
+  var h='<div class="qcard"><span class="tagline">Decision '+(S.i1+1)+'</span>'+esc(q.t)+'</div><div class="choices c5" role="group" aria-label="Choose an owner">';
+  ROLES.forEach(function(r){h+='<button class="opt" type="button" data-k="'+r.k+'">'+ic(r.i)+'<span>'+r.n+'</span><span style="font-weight:500;font-size:12.5px;color:#5b5570">'+r.q+'</span></button>';});
+  h+='</div><div id="fb1"></div><div class="nextRow" id="nx1"></div>';
+  $("q1").innerHTML=h;
+  $("q1").querySelectorAll(".opt").forEach(function(b){b.addEventListener("click",function(){answer1(b.getAttribute("data-k"));});});
+}
+function answer1(k){
+  var q=D1[S.i1],ok=k===q.a;S.s[1].push(ok);
+  $("q1").querySelectorAll(".opt").forEach(function(b){var bk=b.getAttribute("data-k");b.disabled=true;if(bk===q.a)b.classList.add("right");else if(bk===k)b.classList.add("wrong");else b.classList.add("faded");});
+  var label=ROLES.filter(function(r){return r.k===q.a;})[0].n;
+  $("fb1").innerHTML=fbHTML(ok,q.why,label);
+  var bin=$("bin-"+q.a);var m=document.createElement("div");m.className="mini"+(ok?"":" x");m.textContent=q.t.length>70?q.t.slice(0,68)+"...":q.t;bin.appendChild(m);
+  var last=S.i1===D1.length-1;
+  $("nx1").innerHTML='<button class="btn" type="button">'+(last?"On to Tuesday":"Next decision")+' '+ic("arrow")+'</button>';
+  var nb=$("nx1").querySelector("button");nb.focus({preventScroll:true});
+  nb.addEventListener("click",function(){if(last){$("b1").style.width="100%";start2();}else{S.i1++;render1();}});
+}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function start1(){shuffle(D1);show(1);S.i1=0;tray1();render1();}
+
+/* ---------- day 2 ---------- */
+function radar(){
+  var cx=150,cy=140,R=100,n=5,max=3,pts=[],axes="",labels="",rings="";
+  for(var g=1;g<=max;g++){var rp=[];for(var j=0;j<n;j++){var a=-Math.PI/2+j*2*Math.PI/n;rp.push((cx+Math.cos(a)*R*g/max).toFixed(1)+","+(cy+Math.sin(a)*R*g/max).toFixed(1));}rings+='<polygon points="'+rp.join(" ")+'" fill="none" stroke="#1b1830" stroke-opacity=".25" stroke-width="1.5"/>';}
+  COMPS.forEach(function(c,j){
+    var a=-Math.PI/2+j*2*Math.PI/n,v=Math.min(S.radar[c.k],max),r=R*(0.12+0.88*v/max);
+    pts.push((cx+Math.cos(a)*r).toFixed(1)+","+(cy+Math.sin(a)*r).toFixed(1));
+    axes+='<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+Math.cos(a)*R).toFixed(1)+'" y2="'+(cy+Math.sin(a)*R).toFixed(1)+'" stroke="#1b1830" stroke-opacity=".3" stroke-width="1.5"/>';
+    var lx=cx+Math.cos(a)*(R+26),ly=cy+Math.sin(a)*(R+22);
+    labels+='<text x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="700" font-size="12.5" fill="#1b1830">'+c.n+'</text><text x="'+lx.toFixed(1)+'" y="'+(ly+15).toFixed(1)+'" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="13" fill="#134f5c">'+S.radar[c.k]+' fact'+(S.radar[c.k]===1?"":"s")+'</text>';
+  });
+  $("radar").innerHTML='<svg viewBox="-45 0 390 290" role="img" aria-label="Competency map showing how many facts point to each competency">'+rings+axes+'<polygon class="radarPoly" points="'+pts.join(" ")+'" fill="#134f5c" fill-opacity=".55" stroke="#134f5c" stroke-width="3" stroke-linejoin="round"/>'+pts.map(function(p){var xy=p.split(",");return '<circle cx="'+xy[0]+'" cy="'+xy[1]+'" r="5" fill="#FFFF02" stroke="#1b1830" stroke-width="2"/>';}).join("")+labels+'</svg>';
+}
+function render2(){
+  var q=D2[S.i2];setBar(2,S.i2,D2.length+1);
+  var h='<div class="sticky"><span class="tagline" style="display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;margin-bottom:6px">Fact from the brief</span>'+esc(q.t)+'</div><div class="choices c2" style="margin-top:22px" role="group" aria-label="Choose a competency">';
+  COMPS.forEach(function(c){h+='<button class="opt" type="button" data-k="'+c.k+'" style="flex-direction:row;justify-content:flex-start;text-align:left"><span style="width:38px;height:38px;flex:none">'+ic(c.i)+'</span><span>'+c.n+'</span></button>';});
+  h+='</div><div id="fb2"></div><div class="nextRow" id="nx2"></div>';
+  $("q2").innerHTML=h;
+  $("q2").querySelectorAll(".opt").forEach(function(b){b.addEventListener("click",function(){answer2(b.getAttribute("data-k"));});});
+}
+function answer2(k){
+  var q=D2[S.i2],ok=k===q.a;S.s[2].push(ok);
+  $("q2").querySelectorAll(".opt").forEach(function(b){var bk=b.getAttribute("data-k");b.disabled=true;if(bk===q.a)b.classList.add("right");else if(bk===k)b.classList.add("wrong");else b.classList.add("faded");});
+  var label=COMPS.filter(function(c){return c.k===q.a;})[0].n;
+  $("fb2").innerHTML=fbHTML(ok,q.why,label);
+  S.radar[q.a]++;radar();
+  var last=S.i2===D2.length-1;
+  $("nx2").innerHTML='<button class="btn" type="button">'+(last?"Read the map":"Next fact")+' '+ic("arrow")+'</button>';
+  var nb=$("nx2").querySelector("button");nb.focus({preventScroll:true});
+  nb.addEventListener("click",function(){if(last){S.i2++;final2();}else{S.i2++;render2();}});
+}
+function final2(){
+  setBar(2,D2.length,D2.length+1);
+  var h='<div class="qcard"><span class="tagline">Read the map</span>Which two competencies have the most evidence behind them at Vonari? Choose two, then check.</div><div class="choices c1 multi" role="group" aria-label="Choose two competencies">';
+  COMPS.forEach(function(c){h+='<button class="opt txt" type="button" aria-pressed="false" data-k="'+c.k+'" style="flex-direction:row;align-items:center"><span style="width:34px;height:34px;flex:none">'+ic(c.i)+'</span>'+c.n+'</button>';});
+  h+='</div><div class="nextRow"><button class="btn" id="chk2" type="button" disabled>Check my two</button></div><div id="fb2b"></div><div class="nextRow" id="nx2b"></div>';
+  $("q2").innerHTML=h;var sel=[];
+  $("q2").querySelectorAll(".opt").forEach(function(b){b.addEventListener("click",function(){
+    var k=b.getAttribute("data-k"),p=sel.indexOf(k);
+    if(p>-1){sel.splice(p,1);b.classList.remove("sel");b.setAttribute("aria-pressed","false");}
+    else if(sel.length<2){sel.push(k);b.classList.add("sel");b.setAttribute("aria-pressed","true");}
+    $("chk2").disabled=sel.length!==2;
+  });});
+  $("chk2").addEventListener("click",function(){
+    var ans=["data","cust"],ok=sel.length===2&&ans.indexOf(sel[0])>-1&&ans.indexOf(sel[1])>-1;S.s[2].push(ok);
+    $("chk2").disabled=true;$("chk2").style.display="none";
+    $("q2").querySelectorAll(".opt").forEach(function(b){var k=b.getAttribute("data-k");b.disabled=true;b.classList.remove("sel");if(ans.indexOf(k)>-1)b.classList.add("right");else if(sel.indexOf(k)>-1)b.classList.add("wrong");else b.classList.add("faded");});
+    $("fb2b").innerHTML=fbHTML(ok,"Data and customer insight each have two facts behind them; the other three have one each. That's why a company like Vonari would look for them first: the analysis shows which competencies matter most for this company's problems.","Data and Customer insight");
+    $("nx2b").innerHTML='<button class="btn" type="button">On to Wednesday '+ic("arrow")+'</button>';
+    var nb=$("nx2b").querySelector("button");nb.focus({preventScroll:true});nb.addEventListener("click",function(){$("b2").style.width="100%";start3();});
+  });
+}
+function start2(){shuffle(D2);show(2);S.i2=0;S.radar={strat:0,cust:0,data:0,comm:0,tech:0};radar();render2();}
+
+/* ---------- day 3 ---------- */
+function board(){
+  var h='<div></div><div class="hd">Option A<br><span style="font-weight:500;font-size:13px">Dedicated product manager</span></div><div class="hd" style="background:#134f5c">Option B<br><span style="font-weight:500;font-size:13px">Head of Support, two days a week</span></div>';
+  CRIT.forEach(function(c){h+='<div class="rl"><span style="width:26px;height:26px;display:inline-block">'+ic(c.i)+'</span>'+c.n+'</div><div class="cell" id="cell-A-'+c.k+'"></div><div class="cell" id="cell-B-'+c.k+'"></div>';});
+  $("board").innerHTML=h;
+}
+function render3(){
+  var q=D3[S.i3];setBar(3,S.i3,D3.length);
+  var h='<div class="qcard"><span class="optPill" style="background:'+(q.o==="A"?"#fff":"#d3ece9")+'">Option '+q.o+'</span><br>'+esc(q.t)+'</div><div class="choices c3" role="group" aria-label="Value, cost, or risk">';
+  CRIT.forEach(function(c){h+='<button class="opt" type="button" data-k="'+c.k+'">'+ic(c.i)+'<span>'+c.n+'</span></button>';});
+  h+='</div><div id="fb3"></div><div class="nextRow" id="nx3"></div>';
+  $("q3").innerHTML=h;
+  $("q3").querySelectorAll(".opt").forEach(function(b){b.addEventListener("click",function(){answer3(b.getAttribute("data-k"));});});
+}
+function answer3(k){
+  var q=D3[S.i3],ok=k===q.a;S.s[3].push(ok);
+  $("q3").querySelectorAll(".opt").forEach(function(b){var bk=b.getAttribute("data-k");b.disabled=true;if(bk===q.a)b.classList.add("right");else if(bk===k)b.classList.add("wrong");else b.classList.add("faded");});
+  var label=CRIT.filter(function(c){return c.k===q.a;})[0].n;
+  $("fb3").innerHTML=fbHTML(ok,q.why,label);
+  var m=document.createElement("div");m.className="mini"+(ok?"":" x");m.textContent=q.t;$("cell-"+q.o+"-"+q.a).appendChild(m);
+  var last=S.i3===D3.length-1;
+  $("nx3").innerHTML='<button class="btn" type="button">'+(last?"On to Thursday":"Next fact")+' '+ic("arrow")+'</button>';
+  var nb=$("nx3").querySelector("button");nb.focus({preventScroll:true});
+  nb.addEventListener("click",function(){if(last){$("b3").style.width="100%";start4();}else{S.i3++;render3();}});
+}
+function start3(){shuffle(D3);show(3);S.i3=0;board();render3();}
+
+/* ---------- day 4 ---------- */
+function start4(){
+  show(4);S.pick=null;S.step4=0;$("logCard").classList.remove("show");
+  $("b4").style.width="0%";$("c4").textContent="Choose";
+  var h='<div class="qcard"><span class="tagline">Your recommendation</span>You&#39;ve assessed both options. Which one do you recommend to the CEO?</div><div class="pick2">'+
+   '<button class="bigOpt" type="button" data-o="A"><span class="optPill">Option A</span><h3>Create a dedicated product manager role</h3><p>Full-time owner. Costs about one senior developer; hiring takes about three months.</p></button>'+
+   '<button class="bigOpt" type="button" data-o="B" style="background:#d3ece9"><span class="optPill">Option B</span><h3>Head of Support takes product decisions</h3><p>Two days a week. No hiring cost or delay; support work slows.</p></button></div><div id="q4b"></div>';
+  $("q4").innerHTML=h;
+  $("q4").querySelectorAll(".bigOpt").forEach(function(b){b.addEventListener("click",function(){
+    S.pick=b.getAttribute("data-o");
+    $("q4").querySelectorAll(".bigOpt").forEach(function(x){x.disabled=true;if(x===b)x.classList.add("sel");});
+    step4();
+  });});
+}
+function step4(){
+  var P=D4[S.pick],steps=[
+    {tag:"Main reason",q:"Which reason best supports "+P.name+" with evidence from the brief?",opts:P.reasons},
+    {tag:"Risk and mitigation",q:"The main risk of your option: "+P.risk+" Which mitigation is the most specific?",opts:P.mits},
+    {tag:"Decision log line",q:"Which decision log line is complete?",opts:P.logs}
+  ];
+  var st=steps[S.step4];$("b4").style.width=(S.step4/3*100)+"%";$("c4").textContent=(S.step4+1)+" of 3";
+  var order=[0,1,2].sort(function(){return Math.random()-.5;});
+  var h='<div class="qcard" style="margin-top:20px"><span class="tagline">'+st.tag+'</span>'+esc(st.q)+'</div><div class="choices c1" role="group">';
+  order.forEach(function(i){h+='<button class="opt txt" type="button" data-i="'+i+'">'+esc(st.opts[i].t)+'</button>';});
+  h+='</div><div id="fb4"></div><div class="nextRow" id="nx4"></div>';
+  $("q4b").innerHTML=h;
+  $("q4b").querySelectorAll(".opt").forEach(function(b){b.addEventListener("click",function(){
+    var i=+b.getAttribute("data-i"),ok=!!st.opts[i].ok;S.s[4].push(ok);
+    $("q4b").querySelectorAll(".opt").forEach(function(x){var xi=+x.getAttribute("data-i");x.disabled=true;if(st.opts[xi].ok)x.classList.add("right");else if(xi===i)x.classList.add("wrong");else x.classList.add("faded");});
+    var why=ok?(S.step4===0?"It uses facts from the brief, and it follows from your assessment.":S.step4===1?"It's a specific step that makes the risk less likely or less harmful, and it says how you'll check.":"It records the decision, the main reason, the evidence, and when to revisit it."):(st.opts[i].why+" The highlighted option is the stronger one.");
+    $("fb4").innerHTML=fbHTML(ok,why,null);
+    var last=S.step4===2;
+    if(last){$("b4").style.width="100%";var L=P.log;
+      $("logGrid").innerHTML='<div><b>Decision</b>'+esc(L.d)+'</div><div><b>Main reason</b>'+esc(L.r)+'</div><div><b>Evidence</b>'+esc(L.e)+'</div><div><b>Revisit</b>'+esc(L.v)+'</div>';
+      $("logCard").classList.add("show");}
+    $("nx4").innerHTML='<button class="btn" type="button">'+(last?"See my results":"Next step")+' '+ic("arrow")+'</button>';
+    var nb=$("nx4").querySelector("button");nb.focus({preventScroll:true});
+    nb.addEventListener("click",function(){if(last)debrief();else{S.step4++;step4();}});
+  });});
+}
+
+/* ---------- debrief ---------- */
+function debrief(){
+  show(5);
+  var names={1:["Monday","Decision desk","#ff6a3d"],2:["Tuesday","Competency map","#134f5c"],3:["Wednesday","Value, cost, risk","#d62f6b"],4:["Thursday","Make the call","#14996b"]};
+  var h="",tot=0,max=0;
+  [1,2,3,4].forEach(function(d){
+    var got=S.s[d].filter(Boolean).length,m=MAX[d];tot+=got;max+=m;var C=2*Math.PI*44;
+    h+='<div class="ring"><svg viewBox="0 0 110 110"><circle cx="55" cy="55" r="44" fill="none" stroke="#1b1830" stroke-opacity=".12" stroke-width="12"/><circle class="fg" data-off="'+(C*(1-got/m)).toFixed(1)+'" cx="55" cy="55" r="44" fill="none" stroke="'+names[d][2]+'" stroke-width="12" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+C.toFixed(1)+'" transform="rotate(-90 55 55)"/><text x="55" y="62" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="22" fill="#1b1830">'+got+'/'+m+'</text></svg><b>'+names[d][0]+'</b><span>'+names[d][1]+'</span></div>';
+  });
+  $("rings").innerHTML=h;
+  requestAnimationFrame(function(){setTimeout(function(){document.querySelectorAll(".ring .fg").forEach(function(c){c.style.strokeDashoffset=c.getAttribute("data-off");});},80);});
+  var t=$("total"),k=0,iv=setInterval(function(){k++;t.textContent=k;if(k>=tot)clearInterval(iv);},45);if(tot===0)t.textContent="0";
+  $("totalOf").textContent="of "+max+" items correct";
+  burst();
+}
+function burst(){
+  var p=$("debriefPanel"),cols=["#ff6a3d","#134f5c","#d62f6b","#14996b","#FFFF02"];
+  for(var i=0;i<36;i++){var d=document.createElement("span");d.className="burst";d.style.left=(50+Math.random()*10-5)+"%";d.style.top="40px";d.style.background=cols[i%5];
+    d.style.setProperty("--x",(Math.random()*600-300)+"px");d.style.setProperty("--y",(Math.random()*320+40)+"px");d.style.setProperty("--r",(Math.random()*540)+"deg");
+    p.appendChild(d);(function(el){setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},1300);})(d);}
+}
+
+/* ---------- brief drawer ---------- */
+var lastFocus=null;
+function openBrief(){lastFocus=document.activeElement;$("drawer").classList.add("show");$("scrim").classList.add("show");$("drawer").setAttribute("aria-hidden","false");$("closeBrief").focus();}
+function closeBrief(){$("drawer").classList.remove("show");$("scrim").classList.remove("show");$("drawer").setAttribute("aria-hidden","true");if(lastFocus)lastFocus.focus();}
+$("openBrief").addEventListener("click",openBrief);$("closeBrief").addEventListener("click",closeBrief);$("scrim").addEventListener("click",closeBrief);
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("drawer").classList.contains("show"))closeBrief();});
+
+$("startBtn").addEventListener("click",start1);
+$("restart").addEventListener("click",function(){reset();show(0);});
+show(0);
+})();
+</script>
+</body>
+</html>
